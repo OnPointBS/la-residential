@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { SecureForm } from "@/components/security/secure-form";
+import { SecureInput } from "@/components/security/secure-input";
+import { validateAndSanitizeForm } from "@/lib/security";
 
 interface ContactFormProps {
   homeId?: Id<"homes">;
@@ -11,42 +14,67 @@ interface ContactFormProps {
 }
 
 export function ContactForm({ homeId, className = "" }: ContactFormProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const createInquiry = useMutation(api.inquiries.create);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handleSecureSubmit = async (formData: FormData, _csrfToken: string) => {
+    // Validate and sanitize form data
+    const validationResult = validateAndSanitizeForm(
+      Object.fromEntries(formData.entries()),
+      {
+        name: {
+          required: true,
+          type: 'string',
+          minLength: 2,
+          maxLength: 100,
+          sanitize: true
+        },
+        email: {
+          required: true,
+          type: 'email',
+          sanitize: true
+        },
+        phone: {
+          required: false,
+          type: 'phone',
+          sanitize: true
+        },
+        message: {
+          required: true,
+          type: 'text',
+          minLength: 10,
+          maxLength: 1000,
+          sanitize: true
+        }
+      }
+    );
+
+    if (!validationResult.isValid) {
+      return {
+        success: false,
+        errors: validationResult.errors
+      };
+    }
 
     try {
       await createInquiry({
-        ...formData,
+        name: validationResult.sanitizedData.name,
+        email: validationResult.sanitizedData.email,
+        phone: validationResult.sanitizedData.phone || '',
+        message: validationResult.sanitizedData.message,
         homeId,
       });
       
       setIsSubmitted(true);
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      return { success: true };
     } catch (error) {
       console.error("Error submitting inquiry:", error);
-      alert("There was an error submitting your inquiry. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      return {
+        success: false,
+        errors: ["There was an error submitting your inquiry. Please try again."]
+      };
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
   };
 
   if (isSubmitted) {
@@ -66,74 +94,51 @@ export function ContactForm({ homeId, className = "" }: ContactFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-          Full Name *
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          value={formData.name}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
+    <SecureForm
+      onSubmit={handleSecureSubmit}
+      rateLimitKey={`contact-form-${homeId || 'general'}`}
+      maxRequests={3}
+      windowMs={15 * 60 * 1000} // 15 minutes
+      className={className}
+    >
+      <SecureInput
+        name="name"
+        type="text"
+        label="Full Name"
+        placeholder="Enter your full name"
+        required
+        minLength={2}
+        maxLength={100}
+        sanitize
+      />
 
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email Address *
-        </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
+      <SecureInput
+        name="email"
+        type="email"
+        label="Email Address"
+        placeholder="Enter your email address"
+        required
+        sanitize
+      />
 
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-          Phone Number
-        </label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
+      <SecureInput
+        name="phone"
+        type="tel"
+        label="Phone Number"
+        placeholder="Enter your phone number"
+        sanitize
+      />
 
-      <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-          Message *
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          rows={4}
-          value={formData.message}
-          onChange={handleChange}
-          placeholder={homeId ? "Tell us more about your interest in this home..." : "How can we help you?"}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 px-4 rounded-md font-semibold transition-colors"
-      >
-        {isSubmitting ? "Sending..." : "Send Inquiry"}
-      </button>
-    </form>
+      <SecureInput
+        name="message"
+        type="textarea"
+        label="Message"
+        placeholder={homeId ? "Tell us more about your interest in this home..." : "How can we help you?"}
+        required
+        minLength={10}
+        maxLength={1000}
+        sanitize
+      />
+    </SecureForm>
   );
 }
