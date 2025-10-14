@@ -444,8 +444,8 @@ export default function EditHomePage() {
               homeId={homeId}
               existingImages={(homeImages || []).filter(img => img.imageId) as Array<{_id: Id<"homeImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, isInterior: boolean}>}
               onImagesUpdated={() => {
-                // Refresh the images list
-                window.location.reload();
+                // The images will be refreshed automatically via Convex real-time updates
+                console.log('Images updated successfully');
               }}
             />
             
@@ -458,8 +458,8 @@ export default function EditHomePage() {
                 <ReorderableImageGrid
                   images={homeImages.filter(img => img.imageId) as Array<{_id: Id<"homeImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, isInterior: boolean}>}
                   onImagesUpdated={() => {
-                    // Refresh the images list
-                    window.location.reload();
+                    // The images will be refreshed automatically via Convex real-time updates
+                    console.log('Images updated successfully');
                   }}
                 />
               </div>
