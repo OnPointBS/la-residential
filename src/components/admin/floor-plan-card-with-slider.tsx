@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { formatSquareFootage } from "@/lib/utils";
@@ -70,7 +70,7 @@ export function FloorPlanCardWithSlider({ floorPlan, onDelete }: FloorPlanCardWi
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
       {/* Image/File Slider */}
       <div className="relative w-full h-48 bg-gray-100 rounded-md overflow-hidden mb-4">
-        {displayFile ? (
+        {displayFile && displayFile.imageId ? (
           <FileWithUrl
             fileId={displayFile.imageId}
             alt={displayFile.altText}

@@ -10,7 +10,6 @@ import {
   Trash2, 
   Download,
   Search,
-  Filter,
   Home,
   FileText
 } from "lucide-react";
