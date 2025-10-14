@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { X, GripVertical } from "lucide-react";
 import Image from "next/image";
+import { getConvexStorageUrl } from "@/lib/convex-utils";
 
 interface ImageItem {
   _id: Id<"homeImages">;
@@ -102,7 +103,7 @@ export function ReorderableImageGrid({ images, onImagesUpdated }: ReorderableIma
         >
           <div className="aspect-square relative overflow-hidden rounded-t-lg">
             <Image
-              src={`/api/convex/storage/${image.imageId}`}
+              src={getConvexStorageUrl(image.imageId)}
               alt={image.altText}
               fill
               className="object-cover"

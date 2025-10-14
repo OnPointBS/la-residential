@@ -14,6 +14,7 @@ import {
   Loader2
 } from "lucide-react";
 import Image from "next/image";
+import { getConvexStorageUrl } from "@/lib/convex-utils";
 
 interface ImageUpload {
   id: string;
@@ -281,7 +282,7 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
               >
                 <div className="aspect-square relative">
                   <Image
-                    src={`/api/convex/storage/${image.imageId}`}
+                    src={getConvexStorageUrl(image.imageId)}
                     alt={image.altText}
                     fill
                     className="object-cover"
