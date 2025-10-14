@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { 
@@ -14,7 +14,6 @@ import {
   Loader2
 } from "lucide-react";
 import Image from "next/image";
-import { getConvexStorageUrl } from "@/lib/convex-utils";
 
 interface ImageUpload {
   id: string;
@@ -80,6 +79,17 @@ const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.
     img.src = URL.createObjectURL(file);
   });
 };
+
+// Helper component to handle image URL fetching
+function ImageWithUrl({ imageId, alt, ...props }: { imageId: Id<"_storage">, alt: string, [key: string]: any }) {
+  const imageUrl = useQuery(api.files.getUrl, { storageId: imageId });
+  
+  if (!imageUrl) {
+    return <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading...</div>;
+  }
+  
+  return <Image src={imageUrl} alt={alt} {...props} />;
+}
 
 export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }: BulkImageUploadProps) {
   const [images, setImages] = useState<ImageUpload[]>([]);
@@ -281,8 +291,8 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
                 className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden"
               >
                 <div className="aspect-square relative">
-                  <Image
-                    src={getConvexStorageUrl(image.imageId)}
+                  <ImageWithUrl
+                    imageId={image.imageId}
                     alt={image.altText}
                     fill
                     className="object-cover"

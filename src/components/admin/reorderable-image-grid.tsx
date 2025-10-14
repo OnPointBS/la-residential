@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { X, GripVertical } from "lucide-react";
 import Image from "next/image";
-import { getConvexStorageUrl } from "@/lib/convex-utils";
 
 interface ImageItem {
   _id: Id<"homeImages">;
@@ -20,6 +19,17 @@ interface ImageItem {
 interface ReorderableImageGridProps {
   images: ImageItem[];
   onImagesUpdated: () => void;
+}
+
+// Helper component to handle image URL fetching
+function ImageWithUrl({ imageId, alt, ...props }: { imageId: Id<"_storage">, alt: string, [key: string]: any }) {
+  const imageUrl = useQuery(api.files.getUrl, { storageId: imageId });
+  
+  if (!imageUrl) {
+    return <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading...</div>;
+  }
+  
+  return <Image src={imageUrl} alt={alt} {...props} />;
 }
 
 export function ReorderableImageGrid({ images, onImagesUpdated }: ReorderableImageGridProps) {
@@ -102,8 +112,8 @@ export function ReorderableImageGrid({ images, onImagesUpdated }: ReorderableIma
           }`}
         >
           <div className="aspect-square relative overflow-hidden rounded-t-lg">
-            <Image
-              src={getConvexStorageUrl(image.imageId)}
+            <ImageWithUrl
+              imageId={image.imageId}
               alt={image.altText}
               fill
               className="object-cover"

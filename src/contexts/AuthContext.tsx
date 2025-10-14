@@ -62,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setToken(null);
     localStorage.removeItem("auth_token");
+    // Redirect to home page after logout
+    window.location.href = "/";
   };
 
   const value: AuthContextType = {

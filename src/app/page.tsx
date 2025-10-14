@@ -1,3 +1,5 @@
+import { FeaturedHomes } from "@/components/public/featured-homes";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -112,52 +114,7 @@ export default function Home() {
       </section>
 
       {/* Featured Homes Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Featured Homes
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover our latest available homes, each designed with quality, 
-              comfort, and modern living in mind.
-            </p>
-          </div>
-          
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 text-lg mb-6">
-              No homes are currently available. Check back soon for new listings!
-            </p>
-            <a
-              href="/floor-plans"
-              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              View Floor Plans
-              <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-          </div>
-          
-          <div className="text-center">
-            <a
-              href="/homes"
-              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
-            >
-              View All Available Homes
-              <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </section>
+      <FeaturedHomes />
 
       {/* About Preview Section */}
       <section className="py-16 bg-white">

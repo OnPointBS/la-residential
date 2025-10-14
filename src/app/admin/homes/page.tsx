@@ -10,11 +10,25 @@ import {
   Trash2, 
   Eye, 
   Search,
-  Filter
+  Filter,
+  Home
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, formatSquareFootage } from "@/lib/utils";
 import { HOME_STATUSES } from "@/lib/constants";
+import { HomeCardWithSlider } from "@/components/admin/home-card-with-slider";
+
+// Helper component to handle image URL fetching
+function ImageWithUrl({ imageId, alt, ...props }: { imageId: any, alt: string, [key: string]: any }) {
+  const imageUrl = useQuery(api.files.getUrl, { storageId: imageId });
+  
+  if (!imageUrl) {
+    return <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading...</div>;
+  }
+  
+  return <Image src={imageUrl} alt={alt} {...props} />;
+}
 
 export default function AdminHomesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,6 +132,9 @@ export default function AdminHomesPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Image
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Home
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -142,6 +159,22 @@ export default function AdminHomesPage() {
                       const statusConfig = HOME_STATUSES.find(s => s.value === home.status);
                       return (
                         <tr key={home._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {home.heroImageId ? (
+                              <div className="h-12 w-12 relative rounded-lg overflow-hidden bg-gray-200">
+                                <ImageWithUrl
+                                  imageId={home.heroImageId}
+                                  alt={home.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="h-12 w-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <Home className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
                               <div className="text-sm font-medium text-gray-900">
@@ -211,78 +244,14 @@ export default function AdminHomesPage() {
               </div>
 
               {/* Mobile Card View */}
-              <div className="lg:hidden space-y-4">
-                {filteredHomes.map((home) => {
-                  const statusConfig = HOME_STATUSES.find(s => s.value === home.status);
-                  return (
-                    <div key={home._id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {home.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 mb-2">
-                            {home.slug}
-                          </p>
-                          {statusConfig && (
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusConfig.color} text-white`}>
-                              {statusConfig.label}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="w-20 text-gray-500">Address:</span>
-                          <span className="flex-1">{home.address}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="w-20 text-gray-500">Size:</span>
-                          <span className="flex-1">{formatSquareFootage(home.squareFootage)}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="w-20 text-gray-500">Rooms:</span>
-                          <span className="flex-1">{home.bedrooms} bed • {home.bathrooms} bath</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="w-20 text-gray-500">Price:</span>
-                          <span className="flex-1 font-medium text-gray-900">
-                            {home.price ? formatPrice(home.price) : "TBD"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-gray-100">
-                        <Link
-                          href={`/homes/${home.slug}`}
-                          target="_blank"
-                          className="flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Link>
-                        <Link
-                          href={`/admin/homes/${home._id}/edit`}
-                          className="flex items-center text-gray-600 hover:text-gray-700 text-sm font-medium"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(home._id)}
-                          className="flex items-center text-red-600 hover:text-red-700 text-sm font-medium"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="lg:hidden grid grid-cols-1 gap-4">
+                {filteredHomes.map((home) => (
+                  <HomeCardWithSlider
+                    key={home._id}
+                    home={home}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
             </div>
           ) : (

@@ -13,6 +13,17 @@ interface TeamMemberProps {
   fallbackIcon?: React.ReactNode;
 }
 
+// Helper component to handle image URL fetching
+function ImageWithUrl({ imageId, alt, ...props }: { imageId: any, alt: string, [key: string]: any }) {
+  const imageUrl = useQuery(api.files.getUrl, { storageId: imageId });
+  
+  if (!imageUrl) {
+    return <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading...</div>;
+  }
+  
+  return <Image src={imageUrl} alt={alt} {...props} />;
+}
+
 export function TeamMember({ 
   name, 
   role, 
@@ -40,8 +51,8 @@ export function TeamMember({
     <div className="bg-white rounded-lg shadow-sm p-6 text-center">
       <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
         {memberImage ? (
-          <Image
-            src={`https://kindly-shark-235.convex.cloud/api/storage/${memberImage.storageId}`}
+          <ImageWithUrl
+            imageId={memberImage.storageId}
             alt={memberImage.altText || name}
             width={96}
             height={96}
