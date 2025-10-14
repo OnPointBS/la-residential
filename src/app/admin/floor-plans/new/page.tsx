@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { 
   ArrowLeft, 
   Save, 
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 import Link from "next/link";
 
 export default function NewFloorPlanPage() {
   const router = useRouter();
   const createFloorPlan = useMutation(api.floorPlans.create);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -25,14 +27,51 @@ export default function NewFloorPlanPage() {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setIsUploading(true);
 
     try {
+      let imageId: string | undefined;
+      let pdfId: string | undefined;
+
+      // Upload image if provided
+      if (imageFile) {
+        const imageUploadUrl = await generateUploadUrl();
+        const imageResponse = await fetch(imageUploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": imageFile.type },
+          body: imageFile,
+        });
+        const { storageId: imageStorageId } = await imageResponse.json();
+        imageId = imageStorageId;
+      }
+
+      // Upload PDF if provided
+      if (pdfFile) {
+        const pdfUploadUrl = await generateUploadUrl();
+        const pdfResponse = await fetch(pdfUploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": pdfFile.type },
+          body: pdfFile,
+        });
+        const { storageId: pdfStorageId } = await pdfResponse.json();
+        pdfId = pdfStorageId;
+      }
+
       await createFloorPlan({
         ...formData,
+        imageId: imageId as any,
+        pdfId: pdfId as any,
         createdAt: Date.now(),
       });
       
@@ -42,6 +81,7 @@ export default function NewFloorPlanPage() {
       alert("Failed to create floor plan. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -51,6 +91,37 @@ export default function NewFloorPlanPage() {
       ...prev,
       [name]: type === 'number' ? Number(value) : value
     }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const preview = URL.createObjectURL(file);
+      setImagePreview(preview);
+    }
+  };
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPdfFile(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  };
+
+  const removePdf = () => {
+    setPdfFile(null);
+    if (pdfInputRef.current) {
+      pdfInputRef.current.value = '';
+    }
   };
 
   // Auto-generate slug from name
@@ -212,15 +283,40 @@ export default function NewFloorPlanPage() {
                   Floor Plan Image
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img 
+                        src={imagePreview} 
+                        alt="Floor plan preview" 
+                        className="max-h-48 mx-auto mb-4 rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  )}
                   <p className="text-gray-600 mb-2">Upload floor plan image</p>
                   <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
                   <button
                     type="button"
+                    onClick={() => imageInputRef.current?.click()}
                     className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                   >
                     Choose File
                   </button>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
               </div>
 
@@ -229,15 +325,39 @@ export default function NewFloorPlanPage() {
                   PDF Floor Plan
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  {pdfFile ? (
+                    <div className="relative">
+                      <div className="text-center">
+                        <p className="text-gray-800 font-medium mb-2">{pdfFile.name}</p>
+                        <p className="text-sm text-gray-600 mb-4">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removePdf}
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  )}
                   <p className="text-gray-600 mb-2">Upload PDF floor plan</p>
                   <p className="text-sm text-gray-500">PDF up to 25MB</p>
                   <button
                     type="button"
+                    onClick={() => pdfInputRef.current?.click()}
                     className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                   >
                     Choose File
                   </button>
+                  <input
+                    ref={pdfInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePdfUpload}
+                    className="hidden"
+                  />
                 </div>
               </div>
             </div>
