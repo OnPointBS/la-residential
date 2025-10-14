@@ -9,6 +9,9 @@ import { ArrowRight } from "lucide-react";
 export function FeaturedHomes() {
   const featuredHomes = useQuery(api.homes.getFeatured);
 
+  // Debug logging
+  console.log("FeaturedHomes - featuredHomes:", featuredHomes);
+
   if (!featuredHomes) {
     return (
       <section className="py-16 bg-gray-50">
