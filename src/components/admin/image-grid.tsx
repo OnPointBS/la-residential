@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import Image from "next/image";
@@ -66,10 +66,10 @@ export function ImageGrid({ images, onImagesUpdated }: ImageGridProps) {
   const deleteImage = useMutation(api.images.remove);
   const bulkDeleteImages = useMutation(api.images.bulkDelete);
 
-  // Fetch URLs for all images - we'll use a simpler approach
+  // Create images with URLs using the proper Convex URL format
   const imagesWithUrls: ImageWithUrl[] = images.map(img => ({
     ...img,
-    url: `https://kindly-shark-235.convex.cloud/api/storage/${img.storageId}` // Direct URL construction
+    url: `https://kindly-shark-235.convex.cloud/api/storage/${img.storageId}`
   }));
 
   const handleEdit = useCallback((image: typeof images[0]) => {
