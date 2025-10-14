@@ -34,7 +34,6 @@ export default function NewFloorPlanPage() {
       await createFloorPlan({
         ...formData,
         createdAt: Date.now(),
-        updatedAt: Date.now(),
       });
       
       router.push("/admin/floor-plans");

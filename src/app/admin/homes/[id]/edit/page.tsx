@@ -35,7 +35,7 @@ export default function EditHomePage() {
     bathrooms: 0,
     lotSize: "",
     address: "",
-    status: "available" as const,
+    status: "available" as "available" | "under-construction" | "sold" | "coming-soon",
     floorPlanId: "",
     features: [] as string[],
   });
@@ -109,7 +109,7 @@ export default function EditHomePage() {
         lotSize: formData.lotSize,
         address: formData.address,
         status: formData.status,
-        floorPlanId: formData.floorPlanId || undefined,
+        floorPlanId: formData.floorPlanId ? (formData.floorPlanId as Id<"floorPlans">) : undefined,
         features: formData.features,
       };
 
@@ -420,7 +420,7 @@ export default function EditHomePage() {
             {/* Bulk Upload */}
             <BulkImageUpload
               homeId={homeId}
-              existingImages={homeImages || []}
+              existingImages={(homeImages || []).filter(img => img.imageId) as Array<{_id: Id<"homeImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, isInterior: boolean}>}
               onImagesUpdated={() => {
                 // Refresh the images list
                 window.location.reload();
@@ -434,7 +434,7 @@ export default function EditHomePage() {
                   Current Images ({homeImages.length})
                 </h3>
                 <ReorderableImageGrid
-                  images={homeImages}
+                  images={homeImages.filter(img => img.imageId) as Array<{_id: Id<"homeImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, isInterior: boolean}>}
                   onImagesUpdated={() => {
                     // Refresh the images list
                     window.location.reload();

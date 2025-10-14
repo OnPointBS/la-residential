@@ -53,7 +53,6 @@ export default function EditFloorPlanPage() {
       await updateFloorPlan({
         id: floorPlanId,
         ...formData,
-        updatedAt: Date.now(),
       });
       
       router.push("/admin/floor-plans");

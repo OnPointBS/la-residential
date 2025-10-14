@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     login,
     logout,
-    isLoading: isLoading || (token && getCurrentUser === undefined),
+    isLoading: Boolean(isLoading || (token && getCurrentUser === undefined)),
     isAuthenticated: !!getCurrentUser,
   };
 

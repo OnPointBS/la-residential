@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { 
   ArrowLeft, 
   Save, 
@@ -74,7 +75,7 @@ export default function NewHomePage() {
       const homeData = {
         ...formData,
         slug,
-        floorPlanId: formData.floorPlanId || undefined,
+        floorPlanId: formData.floorPlanId ? (formData.floorPlanId as Id<"floorPlans">) : undefined,
       };
 
       await createHome(homeData);

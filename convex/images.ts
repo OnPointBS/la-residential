@@ -34,28 +34,28 @@ export const search = query({
   args: { 
     searchTerm: v.optional(v.string()),
     category: v.optional(v.string()),
-    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("images");
-
+    let images;
+    
     if (args.category) {
-      query = query.withIndex("by_category", (q) => q.eq("category", args.category));
+      images = await ctx.db
+        .query("images")
+        .withIndex("by_category", (q) => q.eq("category", args.category))
+        .collect();
+    } else {
+      images = await ctx.db.query("images").collect();
     }
 
-    const images = await query.collect();
-
-    // Filter by search term and tags
+    // Filter by search term
     return images.filter((image) => {
-      const matchesSearch = !args.searchTerm || 
-        image.name.toLowerCase().includes(args.searchTerm.toLowerCase()) ||
-        image.altText.toLowerCase().includes(args.searchTerm.toLowerCase()) ||
-        (image.caption && image.caption.toLowerCase().includes(args.searchTerm.toLowerCase()));
-
-      const matchesTags = !args.tags || args.tags.length === 0 || 
-        args.tags.some(tag => image.tags.includes(tag));
-
-      return matchesSearch && matchesTags;
+      if (!args.searchTerm) return true;
+      
+      const searchLower = args.searchTerm.toLowerCase();
+      return image.name.toLowerCase().includes(searchLower) ||
+        image.altText.toLowerCase().includes(searchLower) ||
+        (image.caption && image.caption.toLowerCase().includes(searchLower)) ||
+        image.tags.some(tag => tag.toLowerCase().includes(searchLower));
     });
   },
 });

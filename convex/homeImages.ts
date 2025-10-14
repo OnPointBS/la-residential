@@ -27,7 +27,6 @@ export const create = mutation({
     return await ctx.db.insert("homeImages", {
       ...args,
       createdAt: now,
-      updatedAt: now,
     });
   },
 });
@@ -42,11 +41,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
-    const now = Date.now();
-    return await ctx.db.patch(id, {
-      ...updates,
-      updatedAt: now,
-    });
+    return await ctx.db.patch(id, updates);
   },
 });
 

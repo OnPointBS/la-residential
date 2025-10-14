@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Award, Home, MapPin, CheckCircle, Calendar } from "lucide-react";
+import { Users, Award, Home, MapPin, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { TeamMember } from "@/components/public/team-member";
 
