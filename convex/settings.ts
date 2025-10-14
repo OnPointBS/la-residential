@@ -16,6 +16,7 @@ export const get = query({
         companyAddress: "123 Main St, Charlotte, NC 28202",
         metaTitle: "LA Residential - A Branch of Furr Construction - Family-Owned Home Builders",
         metaDescription: "Family-owned home construction and development services in North Carolina. Quality craftsmanship, modern designs, and exceptional customer service.",
+        logoId: undefined,
         socialLinks: {
           facebook: "",
           instagram: "",
@@ -39,6 +40,7 @@ export const initialize = mutation({
         companyAddress: "123 Main St, Charlotte, NC 28202",
         metaTitle: "LA Residential - A Branch of Furr Construction - Family-Owned Home Builders",
         metaDescription: "Family-owned home construction and development services in North Carolina. Quality craftsmanship, modern designs, and exceptional customer service.",
+        logoId: undefined,
         socialLinks: {
           facebook: "",
           instagram: "",
