@@ -21,10 +21,8 @@ export const getByStatus = query({
 export const getFeatured = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
-      .query("homes")
-      .withIndex("by_featured", (q) => q.eq("isFeatured", true))
-      .collect();
+    const allHomes = await ctx.db.query("homes").collect();
+    return allHomes.filter(home => home.isFeatured === true);
   },
 });
 

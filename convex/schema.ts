@@ -23,7 +23,7 @@ export default defineSchema({
     features: v.array(v.string()),
     tourUrl3d: v.optional(v.string()),
     videoTourUrl: v.optional(v.string()),
-    isFeatured: v.boolean(),
+    isFeatured: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_slug", ["slug"])
