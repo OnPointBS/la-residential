@@ -9,13 +9,14 @@ import {
   X, 
   GripVertical, 
   Image as ImageIcon,
+  FileText,
   AlertCircle,
   CheckCircle,
   Loader2
 } from "lucide-react";
 import Image from "next/image";
 
-interface ImageUpload {
+interface FileUpload {
   id: string;
   file: File;
   preview: string;
@@ -23,111 +24,87 @@ interface ImageUpload {
   uploaded: boolean;
   error?: string;
   storageId?: Id<"_storage">;
+  fileType: "image" | "pdf";
 }
 
-interface BulkImageUploadProps {
-  homeId: Id<"homes">;
-  existingImages?: Array<{
-    _id: Id<"homeImages">;
+interface BulkFloorPlanUploadProps {
+  floorPlanId: Id<"floorPlans">;
+  existingFiles?: Array<{
+    _id: Id<"floorPlanImages">;
     imageId: Id<"_storage">;
     altText: string;
     caption?: string;
     order: number;
-    isInterior: boolean;
+    fileType: "image" | "pdf";
   }>;
-  onImagesUpdated?: () => void;
+  onFilesUpdated?: () => void;
 }
 
-// Image compression utility
-const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
-    const img = new window.Image();
-    
-    img.onload = () => {
-      // Calculate new dimensions
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Draw and compress
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now(),
-            });
-            resolve(compressedFile);
-          } else {
-            resolve(file);
-          }
-        },
-        'image/jpeg',
-        quality
-      );
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-// Helper component to handle image URL fetching
-function ImageWithUrl({ imageId, alt, ...props }: { imageId: Id<"_storage">, alt: string, [key: string]: any }) {
-  const imageUrl = useQuery(api.files.getUrl, { storageId: imageId });
+// Helper component to handle file URL fetching
+function FileWithUrl({ imageId, fileType, alt, ...props }: { imageId: Id<"_storage">, fileType: "image" | "pdf", alt: string, [key: string]: any }) {
+  const fileUrl = useQuery(api.files.getUrl, { storageId: imageId });
   
-  if (!imageUrl) {
+  if (!fileUrl) {
     return <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading...</div>;
   }
   
-  return <Image src={imageUrl} alt={alt} {...props} />;
+  if (fileType === "image") {
+    return <Image src={fileUrl} alt={alt} {...props} />;
+  } else {
+    return (
+      <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center p-4">
+        <FileText className="h-12 w-12 text-gray-400 mb-2" />
+        <span className="text-xs text-gray-600 text-center">{alt}</span>
+        <a 
+          href={fileUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 text-xs mt-2 hover:underline"
+        >
+          View PDF
+        </a>
+      </div>
+    );
+  }
 }
 
-export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }: BulkImageUploadProps) {
-  const [images, setImages] = useState<ImageUpload[]>([]);
-  const [existingImagesState, setExistingImagesState] = useState(existingImages);
+export function BulkFloorPlanUpload({ floorPlanId, existingFiles = [], onFilesUpdated }: BulkFloorPlanUploadProps) {
+  const [files, setFiles] = useState<FileUpload[]>([]);
+  const [existingFilesState, setExistingFilesState] = useState(existingFiles);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const generateId = useMutation(api.files.generateUploadUrl);
-  const addImage = useMutation(api.homeImages.create);
-  const updateImageOrder = useMutation(api.homeImages.updateOrder);
-  const deleteImage = useMutation(api.homeImages.remove);
-  const updateHome = useMutation(api.homes.update);
+  const addFile = useMutation(api.floorPlanImages.create);
+  const updateFileOrder = useMutation(api.floorPlanImages.updateOrder);
+  const deleteFile = useMutation(api.floorPlanImages.remove);
+  const updateFloorPlan = useMutation(api.floorPlans.update);
 
   const handleFiles = useCallback(async (files: FileList) => {
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
+    const validFiles = fileArray.filter(file => 
+      file.type.startsWith('image/') || file.type === 'application/pdf'
+    );
     
-    if (imageFiles.length === 0) return;
+    if (validFiles.length === 0) return;
     
-    const newImages: ImageUpload[] = imageFiles.map(file => ({
+    const newFiles: FileUpload[] = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       file,
-      preview: URL.createObjectURL(file),
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
       uploading: false,
       uploaded: false,
+      fileType: file.type.startsWith('image/') ? 'image' as const : 'pdf' as const,
     }));
     
-    setImages(prev => [...prev, ...newImages]);
+    setFiles(prev => [...prev, ...newFiles]);
     
-    // Start uploading images one by one
-    for (const imageUpload of newImages) {
+    // Start uploading files one by one
+    for (const fileUpload of newFiles) {
       try {
-        setImages(prev => prev.map(img => 
-          img.id === imageUpload.id ? { ...img, uploading: true } : img
+        setFiles(prev => prev.map(f => 
+          f.id === fileUpload.id ? { ...f, uploading: true } : f
         ));
-        
-        // Compress the image
-        const compressedFile = await compressImage(imageUpload.file);
         
         // Generate upload URL
         const uploadUrl = await generateId();
@@ -135,53 +112,53 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
         // Upload file to Convex storage
         const result = await fetch(uploadUrl, {
           method: "POST",
-          headers: { "Content-Type": compressedFile.type },
-          body: compressedFile,
+          headers: { "Content-Type": fileUpload.file.type },
+          body: fileUpload.file,
         });
         
         const { storageId } = await result.json();
         
-        // Create image record
-        const order = existingImagesState.length + images.length;
-        await addImage({
-          homeId,
+        // Create file record
+        const order = existingFilesState.length + files.length;
+        await addFile({
+          floorPlanId,
           imageId: storageId,
-          altText: compressedFile.name.replace(/\.[^/.]+$/, ""),
+          altText: fileUpload.file.name.replace(/\.[^/.]+$/, ""),
           caption: "",
           order,
-          isInterior: true,
+          fileType: fileUpload.fileType,
         });
         
-        // Set the first uploaded image as the hero image if no hero image exists
-        const isFirstImage = existingImagesState.length === 0 && images.length === 0;
+        // Set the first uploaded image as the floor plan hero image if no hero image exists
+        const isFirstImage = existingFilesState.length === 0 && files.length === 0 && fileUpload.fileType === 'image';
         if (isFirstImage) {
-          await updateHome({
-            id: homeId,
-            heroImageId: storageId,
+          await updateFloorPlan({
+            id: floorPlanId,
+            imageId: storageId,
           });
         }
         
-        setImages(prev => prev.map(img => 
-          img.id === imageUpload.id 
-            ? { ...img, uploading: false, uploaded: true, storageId }
-            : img
+        setFiles(prev => prev.map(f => 
+          f.id === fileUpload.id 
+            ? { ...f, uploading: false, uploaded: true, storageId }
+            : f
         ));
         
       } catch (error) {
         console.error('Upload error:', error);
-        setImages(prev => prev.map(img => 
-          img.id === imageUpload.id 
-            ? { ...img, uploading: false, error: 'Upload failed' }
-            : img
+        setFiles(prev => prev.map(f => 
+          f.id === fileUpload.id 
+            ? { ...f, uploading: false, error: 'Upload failed' }
+            : f
         ));
       }
     }
     
-    // Refresh the images list
-    if (onImagesUpdated) {
-      onImagesUpdated();
+    // Refresh the files list
+    if (onFilesUpdated) {
+      onFilesUpdated();
     }
-  }, [homeId, existingImagesState.length, images.length, generateId, addImage, onImagesUpdated]);
+  }, [floorPlanId, existingFilesState.length, files.length, generateId, addFile, updateFloorPlan, onFilesUpdated]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -207,46 +184,46 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
     }
   }, [handleFiles]);
 
-  const removeImage = useCallback((imageId: string) => {
-    setImages(prev => prev.filter(img => img.id !== imageId));
+  const removeFile = useCallback((fileId: string) => {
+    setFiles(prev => prev.filter(f => f.id !== fileId));
   }, []);
 
-  const removeExistingImage = useCallback(async (imageId: Id<"homeImages">) => {
+  const removeExistingFile = useCallback(async (fileId: Id<"floorPlanImages">) => {
     try {
-      await deleteImage({ id: imageId });
-      setExistingImagesState(prev => prev.filter(img => img._id !== imageId));
-      if (onImagesUpdated) {
-        onImagesUpdated();
+      await deleteFile({ id: fileId });
+      setExistingFilesState(prev => prev.filter(f => f._id !== fileId));
+      if (onFilesUpdated) {
+        onFilesUpdated();
       }
     } catch (error) {
       console.error('Delete error:', error);
     }
-  }, [deleteImage, onImagesUpdated]);
+  }, [deleteFile, onFilesUpdated]);
 
-  const moveImage = useCallback(async (dragIndex: number, hoverIndex: number) => {
-    const draggedImage = existingImagesState[dragIndex];
-    const newImages = [...existingImagesState];
-    newImages.splice(dragIndex, 1);
-    newImages.splice(hoverIndex, 0, draggedImage);
+  const moveFile = useCallback(async (dragIndex: number, hoverIndex: number) => {
+    const draggedFile = existingFilesState[dragIndex];
+    const newFiles = [...existingFilesState];
+    newFiles.splice(dragIndex, 1);
+    newFiles.splice(hoverIndex, 0, draggedFile);
     
-    setExistingImagesState(newImages);
+    setExistingFilesState(newFiles);
     
     // Update order in database
     try {
-      await updateImageOrder({
-        imageId: draggedImage._id,
+      await updateFileOrder({
+        imageId: draggedFile._id,
         newOrder: hoverIndex,
       });
       
-      if (onImagesUpdated) {
-        onImagesUpdated();
+      if (onFilesUpdated) {
+        onFilesUpdated();
       }
     } catch (error) {
       console.error('Reorder error:', error);
       // Revert on error
-      setExistingImagesState(existingImages);
+      setExistingFilesState(existingFiles);
     }
-  }, [existingImagesState, updateImageOrder, onImagesUpdated, existingImages]);
+  }, [existingFilesState, updateFileOrder, onFilesUpdated, existingFiles]);
 
   return (
     <div className="space-y-6">
@@ -263,57 +240,59 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
       >
         <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Upload Home Images
+          Upload Floor Plan Files
         </h3>
         <p className="text-gray-600 mb-4">
-          Drag and drop images here, or click to select files
+          Drag and drop images or PDF files here, or click to select files
         </p>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
         >
-          Select Images
+          Select Files
         </button>
         <input
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*"
+          accept="image/*,.pdf"
           onChange={handleFileInput}
           className="hidden"
         />
         <p className="text-sm text-gray-500 mt-2">
-          Images will be automatically compressed for optimal performance
+          Supports images (PNG, JPG) and PDF files up to 25MB
         </p>
       </div>
 
-      {/* Existing Images */}
-      {existingImagesState.length > 0 && (
+      {/* Existing Files */}
+      {existingFilesState.length > 0 && (
         <div>
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Current Images ({existingImagesState.length})
+            Current Files ({existingFilesState.length})
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {existingImagesState.map((image, index) => (
+            {existingFilesState.map((file, index) => (
               <div
-                key={image._id}
+                key={file._id}
                 className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden"
               >
                 <div className="aspect-square relative">
-                  <ImageWithUrl
-                    imageId={image.imageId}
-                    alt={image.altText}
+                  <FileWithUrl
+                    imageId={file.imageId}
+                    fileType={file.fileType}
+                    alt={file.altText}
                     fill
                     className="object-cover"
                   />
-                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded flex items-center">
+                    {file.fileType === 'image' ? <ImageIcon className="h-3 w-3 mr-1" /> : <FileText className="h-3 w-3 mr-1" />}
                     {index + 1}
                   </div>
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
-                      onClick={() => removeExistingImage(image._id)}
+                      onClick={() => removeExistingFile(file._id)}
                       className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full"
                     >
                       <X className="h-4 w-4" />
@@ -322,7 +301,7 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
                 </div>
                 <div className="p-2">
                   <p className="text-xs text-gray-600 truncate">
-                    {image.altText}
+                    {file.altText}
                   </p>
                   <div className="flex items-center mt-1">
                     <GripVertical className="h-3 w-3 text-gray-400 mr-1" />
@@ -337,36 +316,43 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
         </div>
       )}
 
-      {/* Uploading Images */}
-      {images.length > 0 && (
+      {/* Uploading Files */}
+      {files.length > 0 && (
         <div>
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Uploading Images ({images.filter(img => !img.uploaded).length})
+            Uploading Files ({files.filter(f => !f.uploaded).length})
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((image) => (
+            {files.map((file) => (
               <div
-                key={image.id}
+                key={file.id}
                 className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
               >
                 <div className="aspect-square relative">
-                  <Image
-                    src={image.preview}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                  />
-                  {image.uploading && (
+                  {file.fileType === 'image' ? (
+                    <Image
+                      src={file.preview}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center p-4">
+                      <FileText className="h-12 w-12 text-gray-400 mb-2" />
+                      <span className="text-xs text-gray-600 text-center">{file.file.name}</span>
+                    </div>
+                  )}
+                  {file.uploading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <Loader2 className="h-8 w-8 text-white animate-spin" />
                     </div>
                   )}
-                  {image.uploaded && (
+                  {file.uploaded && (
                     <div className="absolute inset-0 bg-green-500 bg-opacity-50 flex items-center justify-center">
                       <CheckCircle className="h-8 w-8 text-white" />
                     </div>
                   )}
-                  {image.error && (
+                  {file.error && (
                     <div className="absolute inset-0 bg-red-500 bg-opacity-50 flex items-center justify-center">
                       <AlertCircle className="h-8 w-8 text-white" />
                     </div>
@@ -374,16 +360,16 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
                 </div>
                 <div className="p-2">
                   <p className="text-xs text-gray-600 truncate">
-                    {image.file.name}
+                    {file.file.name}
                   </p>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs text-gray-500">
-                      {(image.file.size / 1024 / 1024).toFixed(1)} MB
+                      {(file.file.size / 1024 / 1024).toFixed(1)} MB
                     </span>
-                    {!image.uploading && !image.uploaded && (
+                    {!file.uploading && !file.uploaded && (
                       <button
                         type="button"
-                        onClick={() => removeImage(image.id)}
+                        onClick={() => removeFile(file.id)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <X className="h-4 w-4" />

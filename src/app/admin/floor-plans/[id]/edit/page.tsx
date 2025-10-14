@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -9,9 +9,11 @@ import {
   ArrowLeft, 
   Save, 
   Upload,
-  X
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import Link from "next/link";
+import { BulkFloorPlanUpload } from "@/components/admin/bulk-floor-plan-upload";
 
 export default function EditFloorPlanPage() {
   const router = useRouter();
@@ -21,6 +23,7 @@ export default function EditFloorPlanPage() {
   const updateFloorPlan = useMutation(api.floorPlans.update);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const floorPlan = useQuery(api.floorPlans.getById, { id: floorPlanId });
+  const floorPlanImages = useQuery(api.floorPlanImages.getByFloorPlan, { floorPlanId });
   
   const [formData, setFormData] = useState({
     name: "",
@@ -32,13 +35,6 @@ export default function EditFloorPlanPage() {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   // Load floor plan data when available
   useEffect(() => {
@@ -303,94 +299,22 @@ export default function EditFloorPlanPage() {
             </div>
           </div>
 
-          {/* File Uploads */}
+          {/* File Management */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Floor Plan Files</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Plan Image
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img 
-                        src={imagePreview} 
-                        alt="Floor plan preview" 
-                        className="max-h-48 mx-auto mb-4 rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  )}
-                  <p className="text-gray-600 mb-2">Upload floor plan image</p>
-                  <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-                  >
-                    Choose File
-                  </button>
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  PDF Floor Plan
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  {pdfFile ? (
-                    <div className="relative">
-                      <div className="text-center">
-                        <p className="text-gray-800 font-medium mb-2">{pdfFile.name}</p>
-                        <p className="text-sm text-gray-600 mb-4">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={removePdf}
-                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  )}
-                  <p className="text-gray-600 mb-2">Upload PDF floor plan</p>
-                  <p className="text-sm text-gray-500">PDF up to 25MB</p>
-                  <button
-                    type="button"
-                    onClick={() => pdfInputRef.current?.click()}
-                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-                  >
-                    Choose File
-                  </button>
-                  <input
-                    ref={pdfInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handlePdfUpload}
-                    className="hidden"
-                  />
-                </div>
-              </div>
+            <div className="flex items-center mb-6">
+              <ImageIcon className="h-6 w-6 text-gray-600 mr-2" />
+              <h2 className="text-xl font-semibold text-gray-900">Floor Plan Files</h2>
             </div>
+            
+            {/* Bulk Upload */}
+            <BulkFloorPlanUpload
+              floorPlanId={floorPlanId}
+              existingFiles={(floorPlanImages || []).filter(img => img.imageId) as Array<{_id: Id<"floorPlanImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, fileType: "image" | "pdf"}>}
+              onFilesUpdated={() => {
+                // The files will be refreshed automatically via Convex real-time updates
+                console.log('Files updated successfully');
+              }}
+            />
           </div>
 
           {/* Submit Button */}
@@ -403,13 +327,13 @@ export default function EditFloorPlanPage() {
             </Link>
             <button
               type="submit"
-              disabled={isSubmitting || isUploading}
+              disabled={isSubmitting}
               className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
             >
-              {isSubmitting || isUploading ? (
+              {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {isUploading ? 'Uploading Files...' : 'Updating...'}
+                  Updating...
                 </>
               ) : (
                 <>

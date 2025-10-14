@@ -55,6 +55,17 @@ export default defineSchema({
   }).index("by_home", ["homeId"])
     .index("by_home_order", ["homeId", "order"]),
 
+  floorPlanImages: defineTable({
+    floorPlanId: v.id("floorPlans"),
+    imageId: v.optional(v.id("_storage")),
+    altText: v.string(),
+    caption: v.optional(v.string()),
+    order: v.number(),
+    fileType: v.union(v.literal("image"), v.literal("pdf")),
+    createdAt: v.number(),
+  }).index("by_floor_plan", ["floorPlanId"])
+    .index("by_floor_plan_order", ["floorPlanId", "order"]),
+
   inquiries: defineTable({
     name: v.string(),
     email: v.string(),
