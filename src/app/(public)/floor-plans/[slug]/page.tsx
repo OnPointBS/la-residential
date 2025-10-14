@@ -67,12 +67,12 @@ export async function generateMetadata({ params }: FloorPlanDetailPageProps): Pr
         description: `${floorPlan.description} ${formatSquareFootage(floorPlan.squareFootage)} floor plan with ${floorPlan.bedrooms} bedrooms and ${floorPlan.bathrooms} bathrooms.`,
       },
     };
-  } catch (error) {
-    return {
-      title: "Floor Plan | LA Residential",
-      description: "View our beautiful floor plan designs in North Carolina.",
-    };
-  }
+      } catch {
+        return {
+          title: "Floor Plan | LA Residential",
+          description: "View our beautiful floor plan designs in North Carolina.",
+        };
+      }
 }
 
 export default async function FloorPlanDetailPage({ params }: FloorPlanDetailPageProps) {

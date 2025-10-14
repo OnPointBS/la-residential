@@ -7,14 +7,12 @@ import { Metadata } from "next";
 import { 
   Home, 
   MapPin, 
-  DollarSign, 
-  Calendar, 
   ArrowLeft,
   Download,
   ExternalLink,
   Play
 } from "lucide-react";
-import { formatPrice, formatSquareFootage, formatDate } from "@/lib/utils";
+import { formatPrice, formatSquareFootage } from "@/lib/utils";
 import { HOME_STATUSES } from "@/lib/constants";
 import { ContactForm } from "@/components/public/contact-form";
 
@@ -73,12 +71,12 @@ export async function generateMetadata({ params }: HomeDetailPageProps): Promise
         description: `${home.description} ${formatSquareFootage(home.squareFootage)} home with ${home.bedrooms} bedrooms and ${home.bathrooms} bathrooms.`,
       },
     };
-  } catch (error) {
-    return {
-      title: "Home Listing | LA Residential",
-      description: "View our beautiful home listings in North Carolina.",
-    };
-  }
+      } catch {
+        return {
+          title: "Home Listing | LA Residential",
+          description: "View our beautiful home listings in North Carolina.",
+        };
+      }
 }
 
 export default async function HomeDetailPage({ params }: HomeDetailPageProps) {
