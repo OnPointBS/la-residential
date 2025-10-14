@@ -3,6 +3,7 @@ import { api } from "@/convex/_generated/api";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { 
   Home, 
   ArrowLeft,
@@ -20,6 +21,58 @@ interface FloorPlanDetailPageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+export async function generateMetadata({ params }: FloorPlanDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  
+  try {
+    const floorPlan = await convex.query(api.floorPlans.getBySlug, { slug });
+    
+    if (!floorPlan) {
+      return {
+        title: "Floor Plan Not Found | LA Residential",
+        description: "The requested floor plan could not be found.",
+      };
+    }
+    
+    return {
+      title: `${floorPlan.name} Floor Plan | LA Residential - A Branch of Furr Construction`,
+      description: `${floorPlan.description} ${formatSquareFootage(floorPlan.squareFootage)} floor plan with ${floorPlan.bedrooms} bedrooms and ${floorPlan.bathrooms} bathrooms. Download the detailed PDF or contact us to build your dream home with this design.`,
+      keywords: [
+        floorPlan.name,
+        "floor plan",
+        "house plans",
+        "home design",
+        "Charlotte NC",
+        "North Carolina",
+        "home builder",
+        "Furr Construction",
+        "LA Residential",
+        `${floorPlan.bedrooms} bedroom`,
+        `${floorPlan.bathrooms} bathroom`,
+        formatSquareFootage(floorPlan.squareFootage),
+        "custom home",
+        "new home construction"
+      ].join(", "),
+      openGraph: {
+        title: `${floorPlan.name} Floor Plan | LA Residential`,
+        description: `${floorPlan.description} ${formatSquareFootage(floorPlan.squareFootage)} floor plan with ${floorPlan.bedrooms} bedrooms and ${floorPlan.bathrooms} bathrooms.`,
+        type: "website",
+        url: `https://la-residential.vercel.app/floor-plans/${floorPlan.slug}`,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${floorPlan.name} Floor Plan | LA Residential`,
+        description: `${floorPlan.description} ${formatSquareFootage(floorPlan.squareFootage)} floor plan with ${floorPlan.bedrooms} bedrooms and ${floorPlan.bathrooms} bathrooms.`,
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Floor Plan | LA Residential",
+      description: "View our beautiful floor plan designs in North Carolina.",
+    };
+  }
 }
 
 export default async function FloorPlanDetailPage({ params }: FloorPlanDetailPageProps) {

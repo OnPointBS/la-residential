@@ -63,9 +63,12 @@ export function FloorPlanCard({ floorPlan }: FloorPlanCardProps) {
           >
             View Details
           </Link>
-          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-md transition-colors">
+          <Link
+            href={`/floor-plans/${floorPlan.slug}`}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-md transition-colors flex items-center justify-center"
+          >
             <Download className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

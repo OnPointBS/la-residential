@@ -3,6 +3,7 @@ import { api } from "@/convex/_generated/api";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { 
   Home, 
   MapPin, 
@@ -23,6 +24,61 @@ interface HomeDetailPageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+export async function generateMetadata({ params }: HomeDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  
+  try {
+    const home = await convex.query(api.homes.getBySlug, { slug });
+    
+    if (!home) {
+      return {
+        title: "Home Not Found | LA Residential",
+        description: "The requested home listing could not be found.",
+      };
+    }
+
+    const statusConfig = HOME_STATUSES.find(s => s.value === home.status);
+    const priceText = home.price ? ` Starting at ${formatPrice(home.price)}.` : "";
+    const statusText = statusConfig ? ` ${statusConfig.label}.` : "";
+    
+    return {
+      title: `${home.name} | LA Residential - A Branch of Furr Construction`,
+      description: `${home.description} ${formatSquareFootage(home.squareFootage)} home with ${home.bedrooms} bedrooms and ${home.bathrooms} bathrooms located at ${home.address}.${priceText}${statusText} Contact us today to learn more about this beautiful home.`,
+      keywords: [
+        home.name,
+        "home for sale",
+        "new home",
+        "Charlotte NC",
+        "North Carolina",
+        "home builder",
+        "Furr Construction",
+        "LA Residential",
+        `${home.bedrooms} bedroom`,
+        `${home.bathrooms} bathroom`,
+        formatSquareFootage(home.squareFootage),
+        home.address,
+        ...home.features
+      ].join(", "),
+      openGraph: {
+        title: `${home.name} | LA Residential`,
+        description: `${home.description} ${formatSquareFootage(home.squareFootage)} home with ${home.bedrooms} bedrooms and ${home.bathrooms} bathrooms.`,
+        type: "website",
+        url: `https://la-residential.vercel.app/homes/${home.slug}`,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${home.name} | LA Residential`,
+        description: `${home.description} ${formatSquareFootage(home.squareFootage)} home with ${home.bedrooms} bedrooms and ${home.bathrooms} bathrooms.`,
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Home Listing | LA Residential",
+      description: "View our beautiful home listings in North Carolina.",
+    };
+  }
 }
 
 export default async function HomeDetailPage({ params }: HomeDetailPageProps) {
@@ -231,13 +287,13 @@ export default async function HomeDetailPage({ params }: HomeDetailPageProps) {
                   <p className="text-gray-600 mb-4">
                     {home.floorPlan.name}
                   </p>
-                  <a
-                    href="#"
+                  <Link
+                    href={`/floor-plans/${home.floorPlan.slug}`}
                     className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </a>
+                    View Floor Plan
+                  </Link>
                 </div>
               </div>
             )}

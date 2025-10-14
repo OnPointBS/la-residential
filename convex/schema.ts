@@ -104,6 +104,7 @@ export default defineSchema({
     companyAddress: v.string(),
     metaTitle: v.string(),
     metaDescription: v.string(),
+    logoId: v.optional(v.id("_storage")),
     socialLinks: v.object({
       facebook: v.optional(v.string()),
       instagram: v.optional(v.string()),

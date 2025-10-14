@@ -59,6 +59,7 @@ export const update = mutation({
     companyAddress: v.optional(v.string()),
     metaTitle: v.optional(v.string()),
     metaDescription: v.optional(v.string()),
+    logoId: v.optional(v.id("_storage")),
     socialLinks: v.optional(v.object({
       facebook: v.optional(v.string()),
       instagram: v.optional(v.string()),
@@ -72,5 +73,24 @@ export const update = mutation({
     }
     
     return await ctx.db.patch(settings._id, args);
+  },
+});
+
+export const uploadLogo = mutation({
+  args: {
+    logoStorageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const settings = await ctx.db.query("settings").first();
+    if (!settings) {
+      throw new Error("Settings not found");
+    }
+    
+    // Delete old logo if it exists
+    if (settings.logoId) {
+      await ctx.storage.delete(settings.logoId);
+    }
+    
+    return await ctx.db.patch(settings._id, { logoId: args.logoStorageId });
   },
 });

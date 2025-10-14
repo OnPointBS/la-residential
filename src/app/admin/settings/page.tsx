@@ -13,9 +13,11 @@ import {
   Globe,
   Facebook,
   Instagram,
-  Youtube
+  Youtube,
+  Image as ImageIcon
 } from "lucide-react";
 import { SettingsFormData } from "@/types";
+import { LogoUpload } from "@/components/admin/logo-upload";
 
 export default function AdminSettingsPage() {
   const settings = useQuery(api.settings.get);
@@ -177,6 +179,23 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Logo Upload */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center mb-6">
+              <ImageIcon className="h-6 w-6 text-blue-600 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">
+                Company Logo
+              </h2>
+            </div>
+            
+            <LogoUpload 
+              currentLogoId={settings?.logoId}
+              onLogoUpdated={() => {
+                // Settings will automatically refresh via Convex real-time updates
+              }}
+            />
           </div>
 
           {/* SEO Settings */}
