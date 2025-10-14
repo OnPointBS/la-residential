@@ -11,13 +11,11 @@ import {
   Phone, 
   MapPin,
   Globe,
-  Facebook,
-  Instagram,
-  Youtube,
   Image as ImageIcon
 } from "lucide-react";
 import { SettingsFormData } from "@/types";
 import { LogoUpload } from "@/components/admin/logo-upload";
+import { SocialMediaManager } from "@/components/admin/social-media-manager";
 
 export default function AdminSettingsPage() {
   const settings = useQuery(api.settings.get);
@@ -248,65 +246,8 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* Social Media Links */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center mb-6">
-              <Facebook className="h-6 w-6 text-blue-600 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">
-                Social Media Links
-              </h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label htmlFor="facebook" className="block text-sm font-medium text-gray-700 mb-2">
-                  <Facebook className="h-4 w-4 inline mr-1" />
-                  Facebook
-                </label>
-                <input
-                  type="url"
-                  id="facebook"
-                  name="socialLinks.facebook"
-                  value={formData.socialLinks.facebook}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://facebook.com/yourpage"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="instagram" className="block text-sm font-medium text-gray-700 mb-2">
-                  <Instagram className="h-4 w-4 inline mr-1" />
-                  Instagram
-                </label>
-                <input
-                  type="url"
-                  id="instagram"
-                  name="socialLinks.instagram"
-                  value={formData.socialLinks.instagram}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://instagram.com/yourpage"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="youtube" className="block text-sm font-medium text-gray-700 mb-2">
-                  <Youtube className="h-4 w-4 inline mr-1" />
-                  YouTube
-                </label>
-                <input
-                  type="url"
-                  id="youtube"
-                  name="socialLinks.youtube"
-                  value={formData.socialLinks.youtube}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://youtube.com/yourchannel"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Dynamic Social Media Links */}
+          <SocialMediaManager />
 
           {/* Save Button */}
           <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-6">

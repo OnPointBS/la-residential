@@ -22,6 +22,7 @@ import type * as homes from "../homes.js";
 import type * as images from "../images.js";
 import type * as inquiries from "../inquiries.js";
 import type * as settings from "../settings.js";
+import type * as socialMediaLinks from "../socialMediaLinks.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   images: typeof images;
   inquiries: typeof inquiries;
   settings: typeof settings;
+  socialMediaLinks: typeof socialMediaLinks;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

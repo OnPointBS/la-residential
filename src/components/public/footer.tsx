@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram, Youtube, Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { NAVIGATION_ITEMS } from "@/lib/constants";
+import { SocialMediaLinks } from "./social-media-links";
 
 export function Footer() {
   const settings = useQuery(api.settings.get);
@@ -69,38 +70,12 @@ export function Footer() {
           {/* Social Media */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-            <div className="flex space-x-4">
-              {settings?.socialLinks?.facebook && (
-                <a
-                  href={settings.socialLinks.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  <Facebook className="h-5 w-5" />
-                </a>
-              )}
-              {settings?.socialLinks?.instagram && (
-                <a
-                  href={settings.socialLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  <Instagram className="h-5 w-5" />
-                </a>
-              )}
-              {settings?.socialLinks?.youtube && (
-                <a
-                  href={settings.socialLinks.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  <Youtube className="h-5 w-5" />
-                </a>
-              )}
-            </div>
+            <SocialMediaLinks 
+              size="md"
+              showLabels={false}
+              orientation="horizontal"
+              className="flex-wrap"
+            />
           </div>
         </div>
 

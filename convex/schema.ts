@@ -112,6 +112,21 @@ export default defineSchema({
     }),
   }),
 
+  // Dynamic social media links table
+  socialMediaLinks: defineTable({
+    platform: v.string(), // e.g., "facebook", "instagram", "twitter", "linkedin", "tiktok", "custom"
+    url: v.string(),
+    icon: v.string(), // Icon name or custom icon identifier
+    label: v.string(), // Display label
+    order: v.number(), // Display order
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_order", ["order"])
+    .index("by_active", ["isActive"])
+    .index("by_platform", ["platform"]),
+
   // Simple auth tables
   users: defineTable({
     email: v.string(),
