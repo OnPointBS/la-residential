@@ -10,10 +10,34 @@ import {
   Trash2, 
   Download,
   Search,
-  Filter
+  Filter,
+  Home,
+  FileText
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { formatSquareFootage } from "@/lib/utils";
+import { FloorPlanCardWithSlider } from "@/components/admin/floor-plan-card-with-slider";
+
+// Helper component to handle file URL fetching
+function FileWithUrl({ fileId, alt, fileType, ...props }: { fileId: any, alt: string, fileType: "image" | "pdf", [key: string]: any }) {
+  const fileUrl = useQuery(api.files.getUrl, { storageId: fileId });
+  
+  if (!fileUrl) {
+    return <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading...</div>;
+  }
+  
+  if (fileType === "image") {
+    return <Image src={fileUrl} alt={alt} {...props} />;
+  } else {
+    return (
+      <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center w-full h-full text-blue-600 hover:text-blue-800 p-2">
+        <FileText className="h-12 w-12 mb-2" />
+        <span className="text-sm text-center truncate">{alt}.pdf</span>
+      </a>
+    );
+  }
+}
 
 export default function AdminFloorPlansPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,21 +85,24 @@ export default function AdminFloorPlansPage() {
           </div>
         </div>
 
-        {/* Search */}
+        {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search floor plans..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search floor plans..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Floor Plans Grid */}
+        {/* Floor Plans Cards */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -85,53 +112,111 @@ export default function AdminFloorPlansPage() {
           
           {filteredFloorPlans.length > 0 ? (
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Image
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Floor Plan
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Specs
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredFloorPlans.map((plan) => (
+                      <tr key={plan._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {plan.imageId ? (
+                            <div className="h-12 w-12 relative rounded-lg overflow-hidden bg-gray-200">
+                              <FileWithUrl
+                                fileId={plan.imageId}
+                                alt={plan.name}
+                                fileType="image"
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-12 w-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <Home className="h-6 w-6 text-gray-400" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {plan.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {plan.slug}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {formatSquareFootage(plan.squareFootage)}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {plan.bedrooms} bed • {plan.bathrooms} bath
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 max-w-xs truncate">
+                            {plan.description}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Link
+                              href={`/floor-plans/${plan.slug}`}
+                              target="_blank"
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View on website"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Link>
+                            <Link
+                              href={`/admin/floor-plans/${plan._id}/edit`}
+                              className="text-gray-600 hover:text-gray-900"
+                              title="Edit floor plan"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(plan._id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete floor plan"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden grid grid-cols-1 gap-4">
                 {filteredFloorPlans.map((plan) => (
-                  <div key={plan._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900">
-                        {plan.name}
-                      </h3>
-                      <div className="flex items-center space-x-1">
-                        <Link
-                          href={`/admin/floor-plans/${plan._id}/edit`}
-                          className="text-gray-400 hover:text-gray-600"
-                          title="Edit floor plan"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(plan._id)}
-                          className="text-gray-400 hover:text-red-600"
-                          title="Delete floor plan"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm text-gray-600 mb-3">
-                      <div>{formatSquareFootage(plan.squareFootage)}</div>
-                      <div>{plan.bedrooms} bed • {plan.bathrooms} bath</div>
-                    </div>
-                    
-                    <p className="text-sm text-gray-700 line-clamp-2 mb-4">
-                      {plan.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <Link
-                        href={`/floor-plans/${plan.slug}`}
-                        target="_blank"
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        View on Website
-                      </Link>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
+                  <FloorPlanCardWithSlider
+                    key={plan._id}
+                    floorPlan={plan}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             </div>
