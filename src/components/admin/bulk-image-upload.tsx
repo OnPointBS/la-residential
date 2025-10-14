@@ -248,6 +248,7 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
           Drag and drop images here, or click to select files
         </p>
         <button
+          type="button"
           onClick={() => fileInputRef.current?.click()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
         >
@@ -290,6 +291,7 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
                   </div>
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
+                      type="button"
                       onClick={() => removeExistingImage(image._id)}
                       className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full"
                     >
@@ -359,6 +361,7 @@ export function BulkImageUpload({ homeId, existingImages = [], onImagesUpdated }
                     </span>
                     {!image.uploading && !image.uploaded && (
                       <button
+                        type="button"
                         onClick={() => removeImage(image.id)}
                         className="text-red-600 hover:text-red-700"
                       >
