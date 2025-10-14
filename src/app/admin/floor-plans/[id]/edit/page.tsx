@@ -8,8 +8,6 @@ import { Id } from "@/convex/_generated/dataModel";
 import { 
   ArrowLeft, 
   Save, 
-  Upload,
-  X,
   Image as ImageIcon
 } from "lucide-react";
 import Link from "next/link";
@@ -21,7 +19,6 @@ export default function EditFloorPlanPage() {
   const floorPlanId = params.id as Id<"floorPlans">;
   
   const updateFloorPlan = useMutation(api.floorPlans.update);
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const floorPlan = useQuery(api.floorPlans.getById, { id: floorPlanId });
   const floorPlanImages = useQuery(api.floorPlanImages.getByFloorPlan, { floorPlanId });
   
@@ -53,41 +50,11 @@ export default function EditFloorPlanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setIsUploading(true);
 
     try {
-      let imageId: string | undefined;
-      let pdfId: string | undefined;
-
-      // Upload image if provided
-      if (imageFile) {
-        const imageUploadUrl = await generateUploadUrl();
-        const imageResponse = await fetch(imageUploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": imageFile.type },
-          body: imageFile,
-        });
-        const { storageId: imageStorageId } = await imageResponse.json();
-        imageId = imageStorageId;
-      }
-
-      // Upload PDF if provided
-      if (pdfFile) {
-        const pdfUploadUrl = await generateUploadUrl();
-        const pdfResponse = await fetch(pdfUploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": pdfFile.type },
-          body: pdfFile,
-        });
-        const { storageId: pdfStorageId } = await pdfResponse.json();
-        pdfId = pdfStorageId;
-      }
-
       await updateFloorPlan({
         id: floorPlanId,
         ...formData,
-        imageId: imageId as any,
-        pdfId: pdfId as any,
       });
       
       router.push("/admin/floor-plans");
@@ -96,7 +63,6 @@ export default function EditFloorPlanPage() {
       alert("Failed to update floor plan. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setIsUploading(false);
     }
   };
 
@@ -125,36 +91,6 @@ export default function EditFloorPlanPage() {
     }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const preview = URL.createObjectURL(file);
-      setImagePreview(preview);
-    }
-  };
-
-  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPdfFile(file);
-    }
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (imageInputRef.current) {
-      imageInputRef.current.value = '';
-    }
-  };
-
-  const removePdf = () => {
-    setPdfFile(null);
-    if (pdfInputRef.current) {
-      pdfInputRef.current.value = '';
-    }
-  };
 
   if (!floorPlan) {
     return (
