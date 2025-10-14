@@ -18,6 +18,16 @@ export const getByStatus = query({
   },
 });
 
+export const getFeatured = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("homes")
+      .withIndex("by_featured", (q) => q.eq("isFeatured", true))
+      .collect();
+  },
+});
+
 export const getById = query({
   args: { id: v.id("homes") },
   handler: async (ctx, args) => {
@@ -85,11 +95,13 @@ export const create = mutation({
     features: v.array(v.string()),
     tourUrl3d: v.optional(v.string()),
     videoTourUrl: v.optional(v.string()),
+    isFeatured: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
     return await ctx.db.insert("homes", {
       ...args,
+      isFeatured: args.isFeatured ?? false,
       createdAt: now,
       updatedAt: now,
     });
@@ -119,6 +131,7 @@ export const update = mutation({
     features: v.optional(v.array(v.string())),
     tourUrl3d: v.optional(v.string()),
     videoTourUrl: v.optional(v.string()),
+    isFeatured: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;

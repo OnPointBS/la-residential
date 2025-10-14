@@ -23,11 +23,13 @@ export default defineSchema({
     features: v.array(v.string()),
     tourUrl3d: v.optional(v.string()),
     videoTourUrl: v.optional(v.string()),
+    isFeatured: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_slug", ["slug"])
     .index("by_status", ["status"])
-    .index("by_floor_plan", ["floorPlanId"]),
+    .index("by_floor_plan", ["floorPlanId"])
+    .index("by_featured", ["isFeatured"]),
 
   floorPlans: defineTable({
     name: v.string(),

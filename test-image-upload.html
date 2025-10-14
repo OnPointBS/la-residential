@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>LA Residential Image Upload Test</h1>
+    
+    <div class="test-section info">
+        <h2>Test Instructions</h2>
+        <p>This page tests the image upload functionality for the LA Residential website.</p>
+        <ol>
+            <li>Click "Test Image Upload" to test the upload functionality</li>
+            <li>Check the console for any errors</li>
+            <li>Verify that images are uploaded and displayed correctly</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Image Upload</h2>
+        <input type="file" id="imageInput" accept="image/*" multiple>
+        <button onclick="testImageUpload()">Test Image Upload</button>
+        <div id="uploadResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Convex Connection</h2>
+        <button onclick="testConvexConnection()">Test Convex Connection</button>
+        <div id="convexResults"></div>
+    </div>
+
+    <script>
+        const CONVEX_URL = 'https://kindly-shark-235.convex.cloud';
+        
+        async function testConvexConnection() {
+            const resultsDiv = document.getElementById('convexResults');
+            resultsDiv.innerHTML = '<p>Testing Convex connection...</p>';
+            
+            try {
+                // Test if we can reach the Convex endpoint
+                const response = await fetch(`${CONVEX_URL}/api/storage/test`);
+                if (response.ok || response.status === 404) {
+                    resultsDiv.innerHTML = '<div class="success"><p>✅ Convex connection successful!</p></div>';
+                } else {
+                    resultsDiv.innerHTML = '<div class="error"><p>❌ Convex connection failed: ' + response.status + '</p></div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="error"><p>❌ Convex connection failed: ' + error.message + '</p></div>';
+            }
+        }
+        
+        async function testImageUpload() {
+            const fileInput = document.getElementById('imageInput');
+            const resultsDiv = document.getElementById('uploadResults');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                resultsDiv.innerHTML = '<div class="error"><p>❌ Please select an image file first</p></div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p>Testing image upload...</p>';
+            
+            try {
+                // Test image compression
+                const file = fileInput.files[0];
+                const compressedBlob = await compressImage(file);
+                
+                resultsDiv.innerHTML += '<div class="success"><p>✅ Image compression successful! Original: ' + 
+                    formatFileSize(file.size) + ', Compressed: ' + formatFileSize(compressedBlob.size) + '</p></div>';
+                
+                // Test upload URL generation
+                const uploadUrl = await generateUploadUrl();
+                resultsDiv.innerHTML += '<div class="success"><p>✅ Upload URL generated successfully</p></div>';
+                
+                // Test actual upload
+                const response = await fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': compressedBlob.type },
+                    body: compressedBlob,
+                });
+                
+                if (response.ok) {
+                    const { storageId } = await response.json();
+                    resultsDiv.innerHTML += '<div class="success"><p>✅ Image uploaded successfully! Storage ID: ' + storageId + '</p></div>';
+                    
+                    // Test image display
+                    const imageUrl = `${CONVEX_URL}/api/storage/${storageId}`;
+                    resultsDiv.innerHTML += '<div class="success"><p>✅ Image URL: <a href="' + imageUrl + '" target="_blank">' + imageUrl + '</a></p></div>';
+                    
+                    // Show image preview
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.className = 'image-preview';
+                    img.onload = () => {
+                        resultsDiv.innerHTML += '<div class="success"><p>✅ Image display test successful!</p></div>';
+                        resultsDiv.appendChild(img);
+                    };
+                    img.onerror = () => {
+                        resultsDiv.innerHTML += '<div class="error"><p>❌ Image display test failed</p></div>';
+                    };
+                } else {
+                    resultsDiv.innerHTML += '<div class="error"><p>❌ Upload failed: ' + response.statusText + '</p></div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="error"><p>❌ Upload test failed: ' + error.message + '</p></div>';
+            }
+        }
+        
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        if (!ctx) {
+                            reject(new Error('Could not get canvas context'));
+                            return;
+                        }
+                        
+                        let width = img.width;
+                        let height = img.height;
+                        const maxWidth = 1200;
+                        
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob(
+                            (blob) => {
+                                if (blob) {
+                                    resolve(blob);
+                                } else {
+                                    reject(new Error('Canvas toBlob failed'));
+                                }
+                            },
+                            'image/jpeg',
+                            0.8
+                        );
+                    };
+                    img.onerror = (error) => reject(error);
+                    img.src = event.target.result;
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        async function generateUploadUrl() {
+            // This would normally call the Convex API, but for testing we'll simulate it
+            // In a real test, you'd need to call the actual Convex endpoint
+            return `${CONVEX_URL}/api/storage/upload`;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

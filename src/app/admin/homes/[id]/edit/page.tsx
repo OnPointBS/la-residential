@@ -38,6 +38,7 @@ export default function EditHomePage() {
     status: "available" as "available" | "under-construction" | "sold" | "coming-soon",
     floorPlanId: "",
     features: [] as string[],
+    isFeatured: false,
   });
   
   const [newFeature, setNewFeature] = useState("");
@@ -60,6 +61,7 @@ export default function EditHomePage() {
         status: home.status,
         floorPlanId: home.floorPlanId || "",
         features: home.features,
+        isFeatured: home.isFeatured || false,
       });
     }
   }, [home]);
@@ -362,6 +364,26 @@ export default function EditHomePage() {
                   ))}
                 </select>
               </div>
+            </div>
+            
+            {/* Featured Toggle */}
+            <div className="mt-6">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  name="isFeatured"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="isFeatured" className="ml-2 block text-sm text-gray-900">
+                  Featured Home (will appear on homepage)
+                </label>
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Check this box to feature this home on the homepage's "Featured Homes" section.
+              </p>
             </div>
           </div>
 
