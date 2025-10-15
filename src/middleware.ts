@@ -81,7 +81,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: https: blob:; " +
     "font-src 'self' data:; " +
-    "connect-src 'self' https://api.stripe.com https://*.convex.cloud; " +
+    "connect-src 'self' https://api.stripe.com https://*.convex.cloud wss://*.convex.cloud; " +
     "frame-src 'self' https://js.stripe.com;"
   );
 

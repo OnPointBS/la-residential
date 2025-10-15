@@ -181,8 +181,7 @@ export default defineSchema({
         .index("by_page_type", ["pageType"])
         .index("by_home", ["homeId"])
         .index("by_floor_plan", ["floorPlanId"])
-        .index("by_timestamp", ["timestamp"])
-        .index("by_date", ["timestamp"]),
+        .index("by_timestamp", ["timestamp"]),
 
       analyticsSessions: defineTable({
         sessionId: v.string(),
