@@ -7,11 +7,10 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { 
   ArrowLeft, 
-  Save, 
-  Image as ImageIcon
+  Save
 } from "lucide-react";
 import Link from "next/link";
-import { BulkFloorPlanUpload } from "@/components/admin/bulk-floor-plan-upload";
+import { ImageSelectionManager } from "@/components/admin/image-selection-manager";
 
 export default function EditFloorPlanPage() {
   const router = useRouter();
@@ -20,7 +19,6 @@ export default function EditFloorPlanPage() {
   
   const updateFloorPlan = useMutation(api.floorPlans.update);
   const floorPlan = useQuery(api.floorPlans.getById, { id: floorPlanId });
-  const floorPlanImages = useQuery(api.floorPlanImages.getByFloorPlan, { floorPlanId });
   
   const [formData, setFormData] = useState({
     name: "",
@@ -236,22 +234,11 @@ export default function EditFloorPlanPage() {
           </div>
 
           {/* File Management */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center mb-6">
-              <ImageIcon className="h-6 w-6 text-gray-600 mr-2" />
-              <h2 className="text-xl font-semibold text-gray-900">Floor Plan Files</h2>
-            </div>
-            
-            {/* Bulk Upload */}
-            <BulkFloorPlanUpload
-              floorPlanId={floorPlanId}
-              existingFiles={(floorPlanImages || []).filter(img => img.imageId) as Array<{_id: Id<"floorPlanImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, fileType: "image" | "pdf"}>}
-              onFilesUpdated={() => {
-                // The files will be refreshed automatically via Convex real-time updates
-                console.log('Files updated successfully');
-              }}
-            />
-          </div>
+          <ImageSelectionManager
+            type="floorPlan"
+            itemId={floorPlanId}
+            className="mb-8"
+          />
 
           {/* Submit Button */}
           <div className="flex justify-end space-x-4">

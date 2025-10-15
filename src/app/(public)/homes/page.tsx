@@ -3,13 +3,19 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HomeCard } from "@/components/public/home-card";
+import { AdvancedHomeSearch } from "@/components/public/advanced-home-search";
 import { useState } from "react";
-import { Filter, Search } from "lucide-react";
-import { HOME_STATUSES } from "@/lib/constants";
+import { Filter } from "lucide-react";
 
 export default function HomesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minSquareFootage, setMinSquareFootage] = useState("");
+  const [maxSquareFootage, setMaxSquareFootage] = useState("");
+  const [bedrooms, setBedrooms] = useState("all");
+  const [bathrooms, setBathrooms] = useState("all");
   
   const allHomes = useQuery(api.homes.getAll);
 
@@ -38,16 +44,36 @@ export default function HomesPage() {
     );
   }
 
-  // Filter homes based on search term and status
+  // Filter homes based on all criteria
   const filteredHomes = allHomes.filter((home) => {
+    // Text search
     const matchesSearch = 
       home.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       home.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      home.description.toLowerCase().includes(searchTerm.toLowerCase());
+      home.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      home.features.some(feature => 
+        feature.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     
+    // Status filter
     const matchesStatus = statusFilter === "all" || home.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // Price filters
+    const matchesMinPrice = !minPrice || home.price >= parseInt(minPrice);
+    const matchesMaxPrice = !maxPrice || home.price <= parseInt(maxPrice);
+    
+    // Square footage filters
+    const matchesMinSqft = !minSquareFootage || home.squareFootage >= parseInt(minSquareFootage);
+    const matchesMaxSqft = !maxSquareFootage || home.squareFootage <= parseInt(maxSquareFootage);
+    
+    // Bedroom filter
+    const matchesBedrooms = bedrooms === "all" || home.bedrooms >= parseInt(bedrooms);
+    
+    // Bathroom filter
+    const matchesBathrooms = bathrooms === "all" || home.bathrooms >= parseFloat(bathrooms);
+    
+    return matchesSearch && matchesStatus && matchesMinPrice && matchesMaxPrice && 
+           matchesMinSqft && matchesMaxSqft && matchesBedrooms && matchesBathrooms;
   });
 
   return (
@@ -62,39 +88,25 @@ export default function HomesPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search homes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-              >
-                <option value="all">All Statuses</option>
-                {HOME_STATUSES.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        {/* Advanced Search */}
+        <AdvancedHomeSearch
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          minPrice={minPrice}
+          setMinPrice={setMinPrice}
+          maxPrice={maxPrice}
+          setMaxPrice={setMaxPrice}
+          minSquareFootage={minSquareFootage}
+          setMinSquareFootage={setMinSquareFootage}
+          maxSquareFootage={maxSquareFootage}
+          setMaxSquareFootage={setMaxSquareFootage}
+          bedrooms={bedrooms}
+          setBedrooms={setBedrooms}
+          bathrooms={bathrooms}
+          setBathrooms={setBathrooms}
+        />
 
         {/* Results Count */}
         <div className="mb-6">
@@ -125,10 +137,16 @@ export default function HomesPage() {
               onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("all");
+                setMinPrice("");
+                setMaxPrice("");
+                setMinSquareFootage("");
+                setMaxSquareFootage("");
+                setBedrooms("all");
+                setBathrooms("all");
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
             >
-              Clear Filters
+              Clear All Filters
             </button>
           </div>
         )}

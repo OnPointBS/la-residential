@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as files from "../files.js";
 import type * as floorPlanImages from "../floorPlanImages.js";
@@ -33,6 +34,7 @@ import type * as socialMediaLinks from "../socialMediaLinks.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  analytics: typeof analytics;
   auth: typeof auth;
   files: typeof files;
   floorPlanImages: typeof floorPlanImages;

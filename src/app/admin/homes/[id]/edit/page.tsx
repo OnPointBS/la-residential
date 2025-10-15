@@ -8,12 +8,10 @@ import { Id } from "@/convex/_generated/dataModel";
 import { 
   ArrowLeft, 
   Save, 
-  X,
-  Image as ImageIcon
+  X
 } from "lucide-react";
 import Link from "next/link";
-import { BulkImageUpload } from "@/components/admin/bulk-image-upload";
-import { ReorderableImageGrid } from "@/components/admin/reorderable-image-grid";
+import { ImageSelectionManager } from "@/components/admin/image-selection-manager";
 
 export default function EditHomePage() {
   const router = useRouter();
@@ -23,7 +21,6 @@ export default function EditHomePage() {
   const updateHome = useMutation(api.homes.update);
   const home = useQuery(api.homes.getById, { id: homeId });
   const floorPlans = useQuery(api.floorPlans.getAll);
-  const homeImages = useQuery(api.homeImages.getByHome, { homeId });
   
   const [formData, setFormData] = useState({
     name: "",
@@ -432,39 +429,12 @@ export default function EditHomePage() {
             </div>
           </div>
 
-          {/* Image Management */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center mb-6">
-              <ImageIcon className="h-6 w-6 text-gray-600 mr-2" />
-              <h2 className="text-xl font-semibold text-gray-900">Image Management</h2>
-            </div>
-            
-            {/* Bulk Upload */}
-            <BulkImageUpload
-              homeId={homeId}
-              existingImages={(homeImages || []).filter(img => img.imageId) as Array<{_id: Id<"homeImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, isInterior: boolean}>}
-              onImagesUpdated={() => {
-                // The images will be refreshed automatically via Convex real-time updates
-                console.log('Images updated successfully');
-              }}
-            />
-            
-            {/* Existing Images Grid */}
-            {homeImages && homeImages.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Current Images ({homeImages.length})
-                </h3>
-                <ReorderableImageGrid
-                  images={homeImages.filter(img => img.imageId) as Array<{_id: Id<"homeImages">, imageId: Id<"_storage">, altText: string, caption?: string, order: number, isInterior: boolean}>}
-                  onImagesUpdated={() => {
-                    // The images will be refreshed automatically via Convex real-time updates
-                    console.log('Images updated successfully');
-                  }}
-                />
-              </div>
-            )}
-          </div>
+          {/* Image Gallery */}
+          <ImageSelectionManager
+            type="home"
+            itemId={homeId}
+            className="mb-8"
+          />
 
           {/* Submit Button */}
           <div className="flex justify-end space-x-4">

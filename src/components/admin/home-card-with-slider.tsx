@@ -49,7 +49,7 @@ export function HomeCardWithSlider({ home, onDelete }: HomeCardWithSliderProps) 
   const statusConfig = HOME_STATUSES.find(s => s.value === home.status);
   
   // Get all images for this home
-  const homeImages = useQuery(api.homeImages.getByHome, { homeId: home._id });
+  const homeImages = useQuery(api.homeImages.getSelectedByHome, { homeId: home._id });
   
   // Create array of images including hero image if it exists
   const allImages = [];

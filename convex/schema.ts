@@ -51,9 +51,11 @@ export default defineSchema({
     caption: v.optional(v.string()),
     order: v.number(),
     isInterior: v.boolean(),
+    isSelected: v.optional(v.boolean()), // Whether this image should be displayed in sliders
     createdAt: v.number(),
   }).index("by_home", ["homeId"])
-    .index("by_home_order", ["homeId", "order"]),
+    .index("by_home_order", ["homeId", "order"])
+    .index("by_home_selected", ["homeId", "isSelected"]),
 
   floorPlanImages: defineTable({
     floorPlanId: v.id("floorPlans"),
@@ -62,9 +64,11 @@ export default defineSchema({
     caption: v.optional(v.string()),
     order: v.number(),
     fileType: v.union(v.literal("image"), v.literal("pdf")),
+    isSelected: v.optional(v.boolean()), // Whether this image should be displayed in sliders
     createdAt: v.number(),
   }).index("by_floor_plan", ["floorPlanId"])
-    .index("by_floor_plan_order", ["floorPlanId", "order"]),
+    .index("by_floor_plan_order", ["floorPlanId", "order"])
+    .index("by_floor_plan_selected", ["floorPlanId", "isSelected"]),
 
   inquiries: defineTable({
     name: v.string(),
@@ -138,13 +142,63 @@ export default defineSchema({
   })
     .index("by_email", ["email"]),
 
-  sessions: defineTable({
-    userId: v.id("users"),
-    token: v.string(),
-    expiresAt: v.number(),
-    createdAt: v.number(),
-  })
-    .index("by_token", ["token"])
-    .index("by_user", ["userId"])
-    .index("by_expires", ["expiresAt"]),
-});
+      sessions: defineTable({
+        userId: v.id("users"),
+        token: v.string(),
+        expiresAt: v.number(),
+        createdAt: v.number(),
+      })
+        .index("by_token", ["token"])
+        .index("by_user", ["userId"])
+        .index("by_expires", ["expiresAt"]),
+
+      // Analytics tracking tables
+      pageViews: defineTable({
+        pagePath: v.string(),
+        pageTitle: v.string(),
+        pageType: v.union(
+          v.literal("home"),
+          v.literal("floor-plan"),
+          v.literal("about"),
+          v.literal("contact"),
+          v.literal("homes-list"),
+          v.literal("floor-plans-list"),
+          v.literal("homepage")
+        ),
+        homeId: v.optional(v.id("homes")),
+        floorPlanId: v.optional(v.id("floorPlans")),
+        referrer: v.optional(v.string()),
+        userAgent: v.optional(v.string()),
+        ipAddress: v.optional(v.string()),
+        country: v.optional(v.string()),
+        city: v.optional(v.string()),
+        deviceType: v.union(v.literal("desktop"), v.literal("mobile"), v.literal("tablet")),
+        browser: v.optional(v.string()),
+        sessionId: v.optional(v.string()),
+        timestamp: v.number(),
+      })
+        .index("by_page_path", ["pagePath"])
+        .index("by_page_type", ["pageType"])
+        .index("by_home", ["homeId"])
+        .index("by_floor_plan", ["floorPlanId"])
+        .index("by_timestamp", ["timestamp"])
+        .index("by_date", ["timestamp"]),
+
+      analyticsSessions: defineTable({
+        sessionId: v.string(),
+        startTime: v.number(),
+        lastActivity: v.number(),
+        pageViews: v.number(),
+        referrer: v.optional(v.string()),
+        userAgent: v.optional(v.string()),
+        ipAddress: v.optional(v.string()),
+        country: v.optional(v.string()),
+        city: v.optional(v.string()),
+        deviceType: v.union(v.literal("desktop"), v.literal("mobile"), v.literal("tablet")),
+        browser: v.optional(v.string()),
+        isBot: v.optional(v.boolean()),
+      })
+        .index("by_session", ["sessionId"])
+        .index("by_start_time", ["startTime"])
+        .index("by_last_activity", ["lastActivity"]),
+    });

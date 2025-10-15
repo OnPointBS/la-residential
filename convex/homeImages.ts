@@ -12,6 +12,17 @@ export const getByHome = query({
   },
 });
 
+// Get only selected images for a specific home (for sliders)
+export const getSelectedByHome = query({
+  args: { homeId: v.id("homes") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("homeImages")
+      .withIndex("by_home_selected", (q) => q.eq("homeId", args.homeId).eq("isSelected", true))
+      .collect();
+  },
+});
+
 // Create a new home image
 export const create = mutation({
   args: {
@@ -108,6 +119,70 @@ export const removeAllForHome = mutation({
       await ctx.db.delete(image._id);
     }
 
+    return images.length;
+  },
+});
+
+// Toggle image selection for slider display
+export const toggleSelection = mutation({
+  args: { id: v.id("homeImages") },
+  handler: async (ctx, args) => {
+    const image = await ctx.db.get(args.id);
+    if (!image) {
+      throw new Error("Image not found");
+    }
+
+    return await ctx.db.patch(args.id, {
+      isSelected: !image.isSelected,
+    });
+  },
+});
+
+// Set image selection status
+export const setSelection = mutation({
+  args: {
+    id: v.id("homeImages"),
+    isSelected: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.patch(args.id, {
+      isSelected: args.isSelected,
+    });
+  },
+});
+
+// Select all images for a home
+export const selectAll = mutation({
+  args: { homeId: v.id("homes") },
+  handler: async (ctx, args) => {
+    const images = await ctx.db
+      .query("homeImages")
+      .withIndex("by_home_order", (q) => q.eq("homeId", args.homeId))
+      .collect();
+
+    const updates = images.map(image => 
+      ctx.db.patch(image._id, { isSelected: true })
+    );
+
+    await Promise.all(updates);
+    return images.length;
+  },
+});
+
+// Deselect all images for a home
+export const deselectAll = mutation({
+  args: { homeId: v.id("homes") },
+  handler: async (ctx, args) => {
+    const images = await ctx.db
+      .query("homeImages")
+      .withIndex("by_home_order", (q) => q.eq("homeId", args.homeId))
+      .collect();
+
+    const updates = images.map(image => 
+      ctx.db.patch(image._id, { isSelected: false })
+    );
+
+    await Promise.all(updates);
     return images.length;
   },
 });

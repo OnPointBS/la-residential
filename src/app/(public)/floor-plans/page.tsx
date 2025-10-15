@@ -3,12 +3,16 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { FloorPlanCard } from "@/components/public/floor-plan-card";
+import { AdvancedFloorPlanSearch } from "@/components/public/advanced-floor-plan-search";
 import { useState } from "react";
-import { Filter, Search } from "lucide-react";
+import { Filter } from "lucide-react";
 
 export default function FloorPlansPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [bedroomFilter, setBedroomFilter] = useState<string>("all");
+  const [bathroomFilter, setBathroomFilter] = useState<string>("all");
+  const [minSquareFootage, setMinSquareFootage] = useState("");
+  const [maxSquareFootage, setMaxSquareFootage] = useState("");
   
   const allFloorPlans = useQuery(api.floorPlans.getAll);
 
@@ -37,15 +41,24 @@ export default function FloorPlansPage() {
     );
   }
 
-  // Filter floor plans based on search term and bedrooms
+  // Filter floor plans based on all criteria
   const filteredFloorPlans = allFloorPlans.filter((plan) => {
+    // Text search
     const matchesSearch = 
       plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       plan.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesBedrooms = bedroomFilter === "all" || plan.bedrooms.toString() === bedroomFilter;
+    // Bedroom filter
+    const matchesBedrooms = bedroomFilter === "all" || plan.bedrooms >= parseInt(bedroomFilter);
     
-    return matchesSearch && matchesBedrooms;
+    // Bathroom filter
+    const matchesBathrooms = bathroomFilter === "all" || plan.bathrooms >= parseFloat(bathroomFilter);
+    
+    // Square footage filters
+    const matchesMinSqft = !minSquareFootage || plan.squareFootage >= parseInt(minSquareFootage);
+    const matchesMaxSqft = !maxSquareFootage || plan.squareFootage <= parseInt(maxSquareFootage);
+    
+    return matchesSearch && matchesBedrooms && matchesBathrooms && matchesMinSqft && matchesMaxSqft;
   });
 
   return (
@@ -61,39 +74,19 @@ export default function FloorPlansPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search floor plans..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Bedroom Filter */}
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <select
-                value={bedroomFilter}
-                onChange={(e) => setBedroomFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-              >
-                <option value="all">All Bedrooms</option>
-                <option value="1">1 Bedroom</option>
-                <option value="2">2 Bedrooms</option>
-                <option value="3">3 Bedrooms</option>
-                <option value="4">4 Bedrooms</option>
-                <option value="5">5+ Bedrooms</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        {/* Advanced Search */}
+        <AdvancedFloorPlanSearch
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          bedroomFilter={bedroomFilter}
+          setBedroomFilter={setBedroomFilter}
+          bathroomFilter={bathroomFilter}
+          setBathroomFilter={setBathroomFilter}
+          minSquareFootage={minSquareFootage}
+          setMinSquareFootage={setMinSquareFootage}
+          maxSquareFootage={maxSquareFootage}
+          setMaxSquareFootage={setMaxSquareFootage}
+        />
 
         {/* Results Count */}
         <div className="mb-6">
@@ -124,10 +117,13 @@ export default function FloorPlansPage() {
               onClick={() => {
                 setSearchTerm("");
                 setBedroomFilter("all");
+                setBathroomFilter("all");
+                setMinSquareFootage("");
+                setMaxSquareFootage("");
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
             >
-              Clear Filters
+              Clear All Filters
             </button>
           </div>
         )}

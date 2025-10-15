@@ -43,7 +43,11 @@ export default function AdminHomesPage() {
   const filteredHomes = homes?.filter((home) => {
     const matchesSearch = 
       home.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      home.address.toLowerCase().includes(searchTerm.toLowerCase());
+      home.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      home.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      home.features.some(feature => 
+        feature.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     
     const matchesStatus = statusFilter === "all" || home.status === statusFilter;
     

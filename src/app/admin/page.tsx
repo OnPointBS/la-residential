@@ -20,6 +20,12 @@ export default function AdminDashboard() {
   const floorPlans = useQuery(api.floorPlans.getAll);
   const inquiries = useQuery(api.inquiries.getAll);
   const unreadInquiries = useQuery(api.inquiries.getUnread);
+  
+  // Get analytics data for the last 7 days
+  const analyticsData = useQuery(api.analytics.getPageViewStats, {
+    startDate: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    endDate: Date.now(),
+  });
 
   const availableHomes = homes?.filter(home => home.status === "available") || [];
   const recentInquiries = inquiries?.slice(0, 5) || [];
@@ -36,8 +42,8 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center">
               <Home className="h-8 w-8 text-blue-600" />
@@ -81,6 +87,18 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-600">New Inquiries</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {unreadInquiries?.length || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Page Views (7d)</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {analyticsData?.totalPageViews?.toLocaleString() || '0'}
                 </p>
               </div>
             </div>
@@ -174,13 +192,24 @@ export default function AdminDashboard() {
                 </Link>
 
                 <Link
-                  href="/admin/images"
+                  href="/admin/analytics"
+                  className="flex items-center p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                >
+                  <TrendingUp className="h-6 w-6 text-indigo-600 mr-4" />
+                  <div>
+                    <p className="font-medium text-indigo-900">View Analytics</p>
+                    <p className="text-sm text-indigo-700">Track website performance and visitors</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/admin/inquiries"
                   className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
                 >
-                  <TrendingUp className="h-6 w-6 text-green-600 mr-4" />
+                  <Mail className="h-6 w-6 text-green-600 mr-4" />
                   <div>
-                    <p className="font-medium text-green-900">Manage Images</p>
-                    <p className="text-sm text-green-700">Upload and organize property images</p>
+                    <p className="font-medium text-green-900">View Inquiries</p>
+                    <p className="text-sm text-green-700">Check customer inquiries and leads</p>
                   </div>
                 </Link>
 

@@ -31,6 +31,7 @@ export const ADMIN_NAVIGATION_ITEMS = [
   { name: "Homes", href: "/admin/homes", icon: "Home" },
   { name: "Floor Plans", href: "/admin/floor-plans", icon: "Blueprint" },
   { name: "Images", href: "/admin/images", icon: "Image" },
+  { name: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
   { name: "Inquiries", href: "/admin/inquiries", icon: "Mail" },
   { name: "Settings", href: "/admin/settings", icon: "Settings" },
 ] as const;
