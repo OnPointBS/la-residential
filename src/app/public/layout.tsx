@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/public/navbar";
 import { Footer } from "@/components/public/footer";
-// import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 export default function PublicLayout({
   children,
@@ -9,7 +9,7 @@ export default function PublicLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* <AnalyticsTracker /> */}
+      <AnalyticsTracker />
       <Navbar />
       <main className="flex-1">
         {children}
