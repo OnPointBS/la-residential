@@ -246,7 +246,7 @@ export function SecureAdminInput({
   const displayError = error || validationError || fileUploadError;
 
   const inputClasses = `
-    w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder-gray-500
+    w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder-gray-500 placeholder-opacity-100
     ${displayError ? 'border-red-300' : 'border-gray-300'}
     ${className}
   `.trim();

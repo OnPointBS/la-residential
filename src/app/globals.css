@@ -32,4 +32,24 @@ input, textarea, select {
 
 input::placeholder, textarea::placeholder {
   color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* More specific selectors for different input states */
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="url"]::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Override any existing placeholder styles */
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #6b7280 !important;
 }
