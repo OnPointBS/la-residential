@@ -74,7 +74,7 @@ export function SecureInput({
   const displayError = error || validationError;
 
   const inputClasses = `
-    w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+    w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder-gray-500
     ${displayError ? 'border-red-300' : 'border-gray-300'}
     ${className}
   `.trim();
@@ -152,7 +152,7 @@ export function SecureSelect({
   };
 
   const selectClasses = `
-    w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+    w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black
     ${error ? 'border-red-300' : 'border-gray-300'}
     ${className}
   `.trim();
